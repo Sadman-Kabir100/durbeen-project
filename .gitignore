@@ -21,6 +21,7 @@ npm-debug.log*
 Thumbs.db
 .npm
 .config
+.cache
 
 # IDE
 .vscode/*
