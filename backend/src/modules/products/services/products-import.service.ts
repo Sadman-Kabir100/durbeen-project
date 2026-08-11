@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { DataSource } from "typeorm";
 import { parse } from "csv-parse/sync";
 import { Product } from "../entities/product.entity";
@@ -43,6 +43,13 @@ export class ProductsImportService {
       trim: true,
       relax_column_count: true,
     });
+
+    const maxRows = parseInt(process.env.PRODUCT_IMPORT_MAX_ROWS || "100000", 10);
+    if (records.length > maxRows) {
+      throw new BadRequestException(
+        `CSV file contains ${records.length.toLocaleString()} rows, which exceeds the maximum limit of ${maxRows.toLocaleString()} rows.`
+      );
+    }
 
     return records;
   }
@@ -141,7 +148,7 @@ export class ProductsImportService {
   }
 
   /**
-   * Preview first N rows of CSV import
+   * Preview first N rows of CSV import and calculate total valid rows across entire file
    */
   public previewCsvImport(csvContent: string | Buffer, previewLimit = 10): ImportPreviewDto {
     const rawRows = this.parseCsvContent(csvContent);
@@ -173,7 +180,7 @@ export class ProductsImportService {
   }
 
   /**
-   * Execute full bulk CSV import with transaction batching & deduplication
+   * Execute full bulk CSV import with transaction batching & fast in-memory deduplication
    */
   public async executeImport(csvContent: string | Buffer): Promise<ImportSummaryDto> {
     const rawRows = this.parseCsvContent(csvContent);
@@ -190,10 +197,10 @@ export class ProductsImportService {
     const authorCache = new Map<string, Author>();
     const publisherCache = new Map<string, Publisher>();
 
-    // Load existing categories, authors, publishers from DB
     const categoryRepo = this.dataSource.getRepository(Category);
     const authorRepo = this.dataSource.getRepository(Author);
     const publisherRepo = this.dataSource.getRepository(Publisher);
+    const productRepo = this.dataSource.getRepository(Product);
 
     const existingCategories = await categoryRepo.find();
     existingCategories.forEach((c) => categoryCache.set(c.name.trim().toLowerCase(), c));
@@ -204,8 +211,31 @@ export class ProductsImportService {
     const existingPublishers = await publisherRepo.find();
     existingPublishers.forEach((p) => publisherCache.set(p.name.trim().toLowerCase(), p));
 
-    // Process valid rows in batches of 100
-    const BATCH_SIZE = 100;
+    // Pre-index existing products for fast O(1) deduplication lookups
+    const existingProducts = await productRepo.find({
+      select: [
+        "id",
+        "name",
+        "sourceProductId",
+        "sourceUrl",
+        "regularPrice",
+        "salePrice",
+        "discount",
+        "description",
+        "imageUrl",
+      ],
+    });
+
+    const sourceIdMap = new Map<string, Product>();
+    const sourceUrlMap = new Map<string, Product>();
+
+    existingProducts.forEach((p) => {
+      if (p.sourceProductId) sourceIdMap.set(p.sourceProductId.trim(), p);
+      if (p.sourceUrl) sourceUrlMap.set(p.sourceUrl.trim(), p);
+    });
+
+    // Process valid rows in chunks of 500
+    const BATCH_SIZE = 500;
     for (let i = 0; i < mappedRows.length; i += BATCH_SIZE) {
       const batch = mappedRows.slice(i, i + BATCH_SIZE);
 
@@ -234,7 +264,7 @@ export class ProductsImportService {
             if (!category) {
               category = queryRunner.manager.create(Category, {
                 name: row.categoryName,
-                slug: slugify(row.categoryName) || `cat-${Date.now()}`,
+                slug: slugify(row.categoryName) || `cat-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
               });
               category = await queryRunner.manager.save(category);
               categoryCache.set(catKey, category);
@@ -249,7 +279,7 @@ export class ProductsImportService {
             if (!author) {
               author = queryRunner.manager.create(Author, {
                 name: row.authorName,
-                slug: slugify(row.authorName) || `author-${Date.now()}`,
+                slug: slugify(row.authorName) || `author-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
               });
               author = await queryRunner.manager.save(author);
               authorCache.set(authorKey, author);
@@ -264,26 +294,22 @@ export class ProductsImportService {
             if (!publisher) {
               publisher = queryRunner.manager.create(Publisher, {
                 name: row.publisherName,
-                slug: slugify(row.publisherName) || `pub-${Date.now()}`,
+                slug: slugify(row.publisherName) || `pub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
               });
               publisher = await queryRunner.manager.save(publisher);
               publisherCache.set(pubKey, publisher);
             }
           }
 
-          // 4. Deduplication Check: Check by sourceProductId or sourceUrl
+          // 4. Deduplication Check via O(1) in-memory map
           let existingProduct: Product | null = null;
 
           if (row.sourceProductId) {
-            existingProduct = await queryRunner.manager.findOne(Product, {
-              where: { sourceProductId: row.sourceProductId },
-            });
+            existingProduct = sourceIdMap.get(row.sourceProductId) || null;
           }
 
           if (!existingProduct && row.sourceUrl) {
-            existingProduct = await queryRunner.manager.findOne(Product, {
-              where: { sourceUrl: row.sourceUrl },
-            });
+            existingProduct = sourceUrlMap.get(row.sourceUrl) || null;
           }
 
           if (existingProduct) {
@@ -299,12 +325,14 @@ export class ProductsImportService {
             if (publisher) existingProduct.publisher = publisher;
 
             await queryRunner.manager.save(existingProduct);
+            if (existingProduct.sourceProductId) sourceIdMap.set(existingProduct.sourceProductId, existingProduct);
+            if (existingProduct.sourceUrl) sourceUrlMap.set(existingProduct.sourceUrl, existingProduct);
             updatedCount++;
           } else {
             // Create new product
             const newProduct = queryRunner.manager.create(Product, {
               name: row.name,
-              slug: slugify(row.name) || `prod-${Date.now()}`,
+              slug: slugify(row.name) || `prod-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
               sourceProductId: row.sourceProductId || undefined,
               sourceUrl: row.sourceUrl || undefined,
               regularPrice: row.regularPrice.toFixed(2),
@@ -320,6 +348,8 @@ export class ProductsImportService {
             });
 
             await queryRunner.manager.save(newProduct);
+            if (newProduct.sourceProductId) sourceIdMap.set(newProduct.sourceProductId, newProduct);
+            if (newProduct.sourceUrl) sourceUrlMap.set(newProduct.sourceUrl, newProduct);
             importedCount++;
           }
         }
@@ -329,7 +359,6 @@ export class ProductsImportService {
         await queryRunner.rollbackTransaction();
         this.logger.error(`Error processing batch: ${err?.message}`, err?.stack);
 
-        // Mark all batch items as failed if transaction fails
         for (const row of batch) {
           if (row.isValid) {
             failedCount++;

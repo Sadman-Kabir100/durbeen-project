@@ -12,6 +12,7 @@ import {
   Download,
   AlertTriangle,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -80,34 +81,38 @@ export default function CsvProductImportPage() {
         skipEmptyLines: true,
         complete: (results) => {
           const rows = results.data;
-          const previewRows = rows.slice(0, 10).map((row, idx) => {
-            const regPrice = parseFloat(row.regular_price || "0") || 0;
-            const salePrice = parseFloat(row.sale_price || "0") || regPrice;
-            const discount = parseFloat(row.discount || "0") || 0;
-            const isValid = Boolean(row.name && row.name.trim() && regPrice >= 0 && salePrice >= 0);
+          const allMappedRows = rows.map((row, idx) => {
+            const name = (row.name || "").trim();
+            const regPrice = parseFloat(String(row.regular_price || "0").replace(/,/g, "")) || 0;
+            const salePrice = parseFloat(String(row.sale_price || "0").replace(/,/g, "")) || regPrice;
+            const discount = parseFloat(String(row.discount || "0").replace(/,/g, "")) || 0;
+            const isValid = Boolean(name && regPrice >= 0 && salePrice >= 0);
 
             return {
               rowNumber: idx + 1,
-              sourceProductId: row.id || "",
-              name: row.name || "",
-              authorName: row.author || "",
-              publisherName: row.publisher || "",
-              categoryName: row.category || "",
+              sourceProductId: (row.id || "").trim(),
+              name,
+              authorName: (row.author || "").trim(),
+              publisherName: (row.publisher || "").trim(),
+              categoryName: (row.category || "").trim(),
               regularPrice: regPrice,
-              salePrice: salePrice,
-              discount: discount,
-              imageUrl: row.image || "",
-              sourceUrl: row.url || "",
+              salePrice,
+              discount,
+              imageUrl: (row.image || "").trim(),
+              sourceUrl: (row.url || "").trim(),
               isValid,
-              validationError: !row.name ? "প্রোডাক্টের নাম খালি" : undefined,
+              validationError: !name ? "প্রোডাক্টের নাম খালি" : undefined,
             };
           });
 
+          const validCount = allMappedRows.filter((r) => r.isValid).length;
+          const invalidCount = allMappedRows.length - validCount;
+
           setPreviewData({
-            totalRows: rows.length,
-            validRowsCount: previewRows.filter((r) => r.isValid).length,
-            invalidRowsCount: previewRows.filter((r) => !r.isValid).length,
-            previewRows,
+            totalRows: allMappedRows.length,
+            validRowsCount: validCount,
+            invalidRowsCount: invalidCount,
+            previewRows: allMappedRows.slice(0, 10),
           });
         },
       });
@@ -175,8 +180,21 @@ export default function CsvProductImportPage() {
         </div>
       )}
 
+      {/* Loading Progress State */}
+      {isImportLoading && (
+        <div className="bg-primary-50 border border-primary-200 rounded-xl p-6 text-center space-y-3">
+          <Loader2 className="h-8 w-8 text-primary-600 animate-spin mx-auto" />
+          <h3 className="text-base font-semibold text-primary-900">
+            ইম্পোর্ট প্রক্রিয়া চলছে...
+          </h3>
+          <p className="text-sm text-primary-700">
+            {previewData?.totalRows ? `${previewData.totalRows.toLocaleString()} টি প্রোডাক্ট ডাটাবেজে সংরক্ষণ করা হচ্ছে। অনুগ্রহ করে অপেক্ষা করুন...` : "প্রসেসিং হচ্ছে..."}
+          </p>
+        </div>
+      )}
+
       {/* Step 1: Upload CSV */}
-      {!selectedFile && !importSummary && (
+      {!selectedFile && !importSummary && !isImportLoading && (
         <div className="border-2 border-dashed border-neutral-300 rounded-xl p-8 bg-white text-center hover:border-primary-500 transition-colors">
           <Upload className="h-12 w-12 text-neutral-400 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-neutral-900">CSV ফাইল আপলোড করুন</h3>
@@ -207,7 +225,7 @@ export default function CsvProductImportPage() {
       )}
 
       {/* Step 2: Preview Table */}
-      {selectedFile && previewData && !importSummary && (
+      {selectedFile && previewData && !importSummary && !isImportLoading && (
         <div className="space-y-6">
           <div className="bg-white p-4 rounded-lg border border-neutral-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -215,7 +233,7 @@ export default function CsvProductImportPage() {
               <div>
                 <p className="font-semibold text-neutral-900">{selectedFile.name}</p>
                 <p className="text-xs text-neutral-500">
-                  মোট সারি: {previewData.totalRows} টি | বৈধ: {previewData.validRowsCount} টি
+                  মোট সারি: {previewData.totalRows.toLocaleString()} টি | বৈধ: {previewData.validRowsCount.toLocaleString()} টি
                 </p>
               </div>
             </div>
@@ -230,7 +248,7 @@ export default function CsvProductImportPage() {
                 onClick={handleStartImport}
                 isLoading={isImportLoading}
               >
-                <Upload className="h-4 w-4" /> ইম্পোর্ট শুরু করুন ({previewData.totalRows} টি)
+                <Upload className="h-4 w-4" /> ইম্পোর্ট শুরু করুন ({previewData.validRowsCount.toLocaleString()} টি)
               </Button>
             </div>
           </div>
@@ -320,23 +338,23 @@ export default function CsvProductImportPage() {
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
               <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-lg text-center">
                 <p className="text-xs text-neutral-500 font-medium">মোট সারি</p>
-                <p className="text-xl font-bold text-neutral-900 mt-0.5">{importSummary.totalRows}</p>
+                <p className="text-xl font-bold text-neutral-900 mt-0.5">{importSummary.totalRows.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-success-50 border border-success-200 rounded-lg text-center">
                 <p className="text-xs text-success-700 font-medium">নতুন ইম্পোর্ট</p>
-                <p className="text-xl font-bold text-success-800 mt-0.5">{importSummary.importedCount}</p>
+                <p className="text-xl font-bold text-success-800 mt-0.5">{importSummary.importedCount.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg text-center">
                 <p className="text-xs text-primary-700 font-medium">আপডেট হয়েছে</p>
-                <p className="text-xl font-bold text-primary-800 mt-0.5">{importSummary.updatedCount}</p>
+                <p className="text-xl font-bold text-primary-800 mt-0.5">{importSummary.updatedCount.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-neutral-100 border border-neutral-200 rounded-lg text-center">
                 <p className="text-xs text-neutral-600 font-medium">স্কিপড</p>
-                <p className="text-xl font-bold text-neutral-700 mt-0.5">{importSummary.skippedCount}</p>
+                <p className="text-xl font-bold text-neutral-700 mt-0.5">{importSummary.skippedCount.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-error-50 border border-error-200 rounded-lg text-center">
                 <p className="text-xs text-error-700 font-medium">ব্যর্থ (Failed)</p>
-                <p className="text-xl font-bold text-error-800 mt-0.5">{importSummary.failedCount}</p>
+                <p className="text-xl font-bold text-error-800 mt-0.5">{importSummary.failedCount.toLocaleString()}</p>
               </div>
             </div>
           </div>

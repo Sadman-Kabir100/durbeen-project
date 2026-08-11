@@ -43,7 +43,7 @@ export class ProductsController {
 
   @Roles("admin", "staff")
   @Post("import/preview")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 100 * 1024 * 1024 } }))
   async previewImport(
     @UploadedFile() file?: Express.Multer.File,
     @Body("csvContent") bodyCsvContent?: string
@@ -62,7 +62,7 @@ export class ProductsController {
 
   @Roles("admin", "staff")
   @Post("import")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 100 * 1024 * 1024 } }))
   async importProducts(
     @UploadedFile() file?: Express.Multer.File,
     @Body("csvContent") bodyCsvContent?: string
