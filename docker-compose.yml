@@ -1,0 +1,146 @@
+name: durbeen
+
+networks:
+  durbeen-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+  backend_node_modules:
+  frontend_node_modules:
+  frontend_next_cache:
+
+services:
+  # -------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432" # dev-এ লোকাল psql/DBeaver দিয়ে সরাসরি কানেক্ট করতে; prod-এ এই পোর্ট বাইরে খোলা থাকবে না
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - durbeen-network
+
+  # -------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - durbeen-network
+
+  # -------------------------------------------------------------------------
+  # ⚠️ ঐচ্ছিক — বর্তমান ব্যাকএন্ড কোড এখনো Elasticsearch ব্যবহার করে না (Search মডিউল
+  # ভবিষ্যতে যোগ হবে)। ডিফল্টে এই সার্ভিস চালু হয় না — চালাতে হলে:
+  #   docker compose --profile search-preview up
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    restart: unless-stopped
+    profiles: ["search-preview"]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - durbeen-network
+
+  # -------------------------------------------------------------------------
+  backend:
+    image: node:20-alpine
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ./.env
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      ELASTICSEARCH_HOST: elasticsearch
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    ports:
+      - "4000:4000"
+    command: sh -c "npm install && npm run migration:run && npm run start:dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - durbeen-network
+
+  # -------------------------------------------------------------------------
+  frontend:
+    image: node:20-alpine
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ./.env
+    environment:
+      # ⚠️ root .env এর PORT=4000 ব্যাকএন্ডের (NestJS) জন্য, কিন্তু env_file দিয়ে
+      # এই সার্ভিসেও inherit হয়ে যায় — Next.js dev server PORT env var respect করে,
+      # ফলে override না করলে Next.js ভুলবশত 4000-এ বাইন্ড হয়ে যেত (Nginx/port-mapping
+      # 3000 প্রত্যাশা করা সত্ত্বেও), যা 502 Bad Gateway-এর মূল কারণ ছিল।
+      PORT: "3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_next_cache:/app/.next
+    ports:
+      - "3000:3000"
+    # -p 3000 এখানে explicit রাখা হয়েছে defense-in-depth হিসেবে — উপরের PORT override
+    # সরানো/ভুল করে বাদ পড়লেও Next.js dev server নিশ্চিতভাবে 3000-এই বাইন্ড হবে,
+    # যেহেতু CLI flag PORT env var-এর চেয়ে অগ্রাধিকার পায়।
+    command: sh -c "npm install && npm run dev -- -p 3000"
+    depends_on:
+      - backend
+    networks:
+      - durbeen-network
+
+  # -------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d/durbeen.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/snippets:/etc/nginx/snippets:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - durbeen-network

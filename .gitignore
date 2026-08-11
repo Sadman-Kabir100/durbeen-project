@@ -1,0 +1,31 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+**/node_modules
+
+# Build output
+backend/dist
+frontend/.next
+frontend/out
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Docker volumes বা লোকাল ডেটা (যদি কেউ bind-mount হিসেবে রাখে)
+docker/backup/local-backups/
+
+# TypeScript বিল্ড ইনফো
+*.tsbuildinfo

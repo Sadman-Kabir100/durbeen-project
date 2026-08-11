@@ -1,0 +1,31 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: "default-notifications"
+  group_by: ["alertname"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: "default-notifications"
+    # প্রোডাকশনে Slack ওয়েবহুক বা ইমেইল বসাতে নিচের কমেন্ট আনকমেন্ট করে
+    # .env এ ALERTMANAGER_SLACK_WEBHOOK_URL সেট করুন এবং docker-compose.prod.yml এ
+    # এই ফাইলটা env-substitution দিয়ে (envsubst/gomplate) জেনারেট করা যেতে পারে,
+    # অথবা সহজভাবে ডিপ্লয়ের আগে ম্যানুয়ালি এই মান বসিয়ে নিন।
+    #
+    # slack_configs:
+    #   - api_url: "https://hooks.slack.com/services/REPLACE/WITH/REAL_WEBHOOK"
+    #     channel: "#durbeen-alerts"
+    #     send_resolved: true
+    #
+    # email_configs:
+    #   - to: "devops@durbeen.com"
+    #     from: "alerts@durbeen.com"
+    #     smarthost: "smtp.example.com:587"
+    #     auth_username: "alerts@durbeen.com"
+    #     auth_password: "REPLACE_WITH_REAL_SMTP_PASSWORD"
+    webhook_configs:
+      - url: "http://localhost:5001/dummy-receiver"
+        send_resolved: true

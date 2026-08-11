@@ -1,0 +1,37 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - "/etc/prometheus/alert-rules.yml"
+
+scrape_configs:
+  # Prometheus নিজের স্বাস্থ্য মনিটর করে
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # হোস্ট-লেভেল মেট্রিক (CPU, মেমরি, ডিস্ক, নেটওয়ার্ক)
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # PostgreSQL মেট্রিক (কানেকশন কাউন্ট, কোয়েরি লেটেন্সি, টেবিল সাইজ, লক)
+  - job_name: "postgres-exporter"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  # Redis মেট্রিক (মেমরি ব্যবহার, hit/miss ratio, কানেকটেড ক্লায়েন্ট)
+  - job_name: "redis-exporter"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
+  # ⚠️ নোট: backend/frontend কন্টেইনার এখনো নিজস্ব /metrics এন্ডপয়েন্ট এক্সপোজ করে না
+  # (app-level কাস্টম মেট্রিক — অর্ডার-রেট, পেমেন্ট-ব্যর্থতার-হার ইত্যাদির জন্য prom-client
+  # ইন্টিগ্রেশন প্রয়োজন হবে, যা এখনো যোগ করা হয়নি)। এই মুহূর্তে infra-level মনিটরিং
+  # (উপরের ৩টা exporter) দিয়েই কাজ চালানো হচ্ছে — অ্যাপ কোডে কোনো পরিবর্তন ছাড়াই।

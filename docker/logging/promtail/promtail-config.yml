@@ -1,0 +1,40 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Docker সকেট থেকে সব কন্টেইনারের stdout/stderr লগ স্বয়ংক্রিয়ভাবে ডিসকভার করে
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+
+    relabel_configs:
+      # কন্টেইনার নাম থেকে "container" লেবেল বসানো — Grafana-তে সার্ভিস অনুযায়ী ফিল্টার করতে
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: "container"
+      # কম্পোজ প্রজেক্ট/সার্ভিস লেবেল — একই docker-compose প্রজেক্টের লগ গ্রুপ করতে
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: "compose_service"
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_project"]
+        target_label: "compose_project"
+
+    pipeline_stages:
+      # backend/frontend যদি JSON-স্ট্রাকচার্ড লগ প্রিন্ট করে, সেটা পার্স করে লেবেল/ফিল্ড
+      # বের করার একটা প্রস্তুত স্টেজ — এই মুহূর্তে অ্যাপ প্লেইন-টেক্সট Nest Logger আউটপুট
+      # দেয় (JSON না), তাই এই স্টেজ কার্যকরভাবে no-op থাকবে যতক্ষণ না লগ ফরম্যাট
+      # JSON-এ পরিবর্তন করা হয় — ভবিষ্যতে nestjs-pino জাতীয় প্যাকেজ যোগ করলে সক্রিয় হবে।
+      - json:
+          expressions:
+            level: level
+            message: message
+          source: ""
+      - labels:
+          level:

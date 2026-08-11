@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-neutral-50 font-bengali text-neutral-900 antialiased;
+  }
+
+  /* কীবোর্ড অ্যাক্সেসিবিলিটি — ডিজাইন সিস্টেম অংশ গ (ক্রস-পেজ কনসিস্টেন্সি) অনুযায়ী */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-600 ring-offset-2 ring-offset-white;
+  }
+
+  /* সংখ্যা কলামে align রাখতে tabular figures — ডিজাইন ডকুমেন্ট অংশ ক.১ */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-neutral-300;
+  }
+
+  /* হরাইজন্টাল স্ক্রল ক্যারোসেলে স্ক্রলবার লুকানো, কিন্তু scroll কার্যকর রাখা */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+  }
+  .scroll-snap-start {
+    scroll-snap-align: start;
+  }
+}
+
+/* prefers-reduced-motion রেসপেক্ট — ডিজাইন ডকুমেন্ট অংশ ক.৫ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

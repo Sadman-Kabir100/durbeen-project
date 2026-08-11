@@ -1,0 +1,2 @@
+# প্রতিদিন রাত ৩:০০ (কন্টেইনারের টাইমজোন অনুযায়ী, docker-compose.prod.yml এ TZ সেট করা আছে)
+0 3 * * * /usr/local/bin/backup-db.sh >> /var/log/backup.log 2>&1
