@@ -1,0 +1,5 @@
+backend/
+docker/
+docker-compose.yml
+docker-compose.prod.yml
+scripts/

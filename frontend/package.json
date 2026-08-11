@@ -32,5 +32,8 @@
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwindcss": "^3.4.7",
     "typescript": "^5.5.4"
+  },
+  "optionalDependencies": {
+    "@next/swc-linux-x64-gnu": "^14.2.5"
   }
 }
