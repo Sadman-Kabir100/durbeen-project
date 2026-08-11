@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { getProducts, type ProductItem } from "@/lib/api/products";
+import { getMediaUrl } from "@/lib/utils/media";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<ProductItem[]>([]);
@@ -41,7 +42,7 @@ export default function AdminProductsPage() {
         <div className="h-10 w-10 overflow-hidden rounded border border-neutral-200 bg-neutral-100 flex items-center justify-center text-neutral-400">
           {row.imageUrl ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={row.imageUrl} alt={row.name} className="h-full w-full object-cover" />
+            <img src={getMediaUrl(row.imageUrl)} alt={row.name} className="h-full w-full object-cover" />
           ) : (
             <BookOpen className="h-5 w-5" />
           )}
