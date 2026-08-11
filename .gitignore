@@ -22,6 +22,8 @@ Thumbs.db
 .npm
 .config
 .cache
+.vercel
+vercel
 
 # IDE
 .vscode/*
