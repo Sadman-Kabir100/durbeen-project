@@ -14,6 +14,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { OrdersModule } from "./modules/orders/orders.module";
 import { PaymentsModule } from "./modules/payments/payments.module";
 import { DeliveryModule } from "./modules/delivery/delivery.module";
+import { ProductsModule } from "./modules/products/products.module";
 import { HealthModule } from "./modules/health/health.module";
 import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./modules/auth/guards/roles.guard";
@@ -36,6 +37,7 @@ import { RolesGuard } from "./modules/auth/guards/roles.guard";
     OrdersModule,
     PaymentsModule,
     DeliveryModule,
+    ProductsModule,
     HealthModule,
     // পরবর্তী মাইলস্টোনে যোগ হবে: ProductModule, CategoryModule, InventoryModule,
     // CartModule, ReviewModule, CouponModule, NotificationModule (পূর্ণাঙ্গ), InvoiceModule, SearchModule
