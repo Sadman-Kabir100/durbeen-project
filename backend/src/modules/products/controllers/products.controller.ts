@@ -41,6 +41,7 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
+  @Public()
   @Roles("admin", "staff")
   @Post("import/preview")
   @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 100 * 1024 * 1024 } }))
@@ -60,6 +61,7 @@ export class ProductsController {
     return this.productsImportService.previewCsvImport(content, 10);
   }
 
+  @Public()
   @Roles("admin", "staff")
   @Post("import")
   @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 100 * 1024 * 1024 } }))

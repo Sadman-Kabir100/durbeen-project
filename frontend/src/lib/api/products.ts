@@ -71,6 +71,17 @@ export interface ImportSummaryResponse {
   }[];
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+}
+
 /**
  * Fetch list of products for admin panel
  */
@@ -82,7 +93,9 @@ export async function getProducts(page = 1, limit = 20, search = ""): Promise<Pr
   });
 
   try {
-    const res = await fetch(`${API_BASE_URL}/products?${query.toString()}`);
+    const res = await fetch(`${API_BASE_URL}/products?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
     if (!res.ok) {
       throw new Error(`Failed to fetch products: ${res.statusText}`);
     }
@@ -106,6 +119,7 @@ export async function previewCsvImport(file: File | string): Promise<ImportPrevi
 
   const res = await fetch(`${API_BASE_URL}/products/import/preview`, {
     method: "POST",
+    headers: getAuthHeaders(),
     body: formData,
   });
 
@@ -130,6 +144,7 @@ export async function executeCsvImport(file: File | string): Promise<ImportSumma
 
   const res = await fetch(`${API_BASE_URL}/products/import`, {
     method: "POST",
+    headers: getAuthHeaders(),
     body: formData,
   });
 
