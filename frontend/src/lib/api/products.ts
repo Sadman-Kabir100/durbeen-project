@@ -1,8 +1,14 @@
-const API_BASE_URL = (
+const rawBaseUrl = (
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:4000"
+  "http://localhost:4000/api/v1"
 ).replace(/\/+$/, "");
+
+export const API_BASE_URL = rawBaseUrl.endsWith("/api/v1")
+  ? rawBaseUrl
+  : rawBaseUrl.endsWith("/api")
+  ? `${rawBaseUrl}/v1`
+  : `${rawBaseUrl}/api/v1`;
 
 export interface ProductItem {
   id: string;
