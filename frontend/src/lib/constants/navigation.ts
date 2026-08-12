@@ -1,9 +1,7 @@
 import type { FooterLinkGroup, NavItem } from "@/types/navigation";
 
 /**
- * প্রধান ক্যাটাগরি নেভিগেশন — আগের "wafilife.com সম্পূর্ণ বিশ্লেষণ" ধাপে
- * পর্যবেক্ষিত হেডার নেভিগেশন কাঠামো অনুসরণ করা হয়েছে:
- * বই-কেন্দ্রিক প্রথম কয়েকটি লিংক, তারপর non-book ভার্টিক্যাল।
+ * প্রধান ক্যাটাগরি নেভিগেশন — বই-কেন্দ্রিক নেভিগেশন কাঠামো।
  */
 export const MAIN_NAV: NavItem[] = [
   { id: "home", label: "হোম", href: "/" },
@@ -23,10 +21,6 @@ export const MAIN_NAV: NavItem[] = [
   { id: "publisher", label: "প্রকাশক", href: "/cat/books/publisher" },
   { id: "today-offer", label: "আজকের অফার", href: "/offers/today", highlight: true },
   { id: "pre-order", label: "প্রি-অর্ডার", href: "/cat/books/pre-order" },
-  { id: "food", label: "ফুড", href: "/cat/products/food" },
-  { id: "lifestyle", label: "লাইফস্টাইল", href: "/cat/products/lifestyle" },
-  { id: "gadget", label: "গ্যাজেট", href: "/cat/products/gadget" },
-  { id: "stationery", label: "স্টেশনারি", href: "/cat/products/stationery" },
 ];
 
 export const FOOTER_LINK_GROUPS: FooterLinkGroup[] = [

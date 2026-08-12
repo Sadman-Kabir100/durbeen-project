@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Youtube, Instagram, Smartphone } from "lucide-react";
+import { Facebook, Youtube, Instagram } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { FOOTER_LINK_GROUPS } from "@/lib/constants/navigation";
 
@@ -14,33 +14,6 @@ export function Footer() {
 
   return (
     <footer className="border-t border-neutral-200 bg-white">
-      {/* অ্যাপ ডাউনলোড CTA ব্লক — আগের হোমপেজ বিশ্লেষণে ফুটারের ঠিক আগে দেখা গিয়েছিল */}
-      <div className="bg-primary-50">
-        <Container className="flex flex-col items-center justify-between gap-4 py-8 md:flex-row">
-          <div className="flex items-center gap-3 text-center md:text-left">
-            <Smartphone className="h-8 w-8 text-primary-600" aria-hidden />
-            <div>
-              <p className="font-semibold text-neutral-900">Durbeen অ্যাপ ডাউনলোড করুন</p>
-              <p className="text-sm text-neutral-600">এক্সক্লুসিভ অফার ও দ্রুত চেকআউট পান</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <a
-              href="#"
-              className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors duration-fast hover:bg-neutral-900/90"
-            >
-              Google Play
-            </a>
-            <a
-              href="#"
-              className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition-colors duration-fast hover:bg-neutral-50"
-            >
-              App Store
-            </a>
-          </div>
-        </Container>
-      </div>
-
       <Container className="grid grid-cols-2 gap-8 py-10 md:grid-cols-4">
         <div className="col-span-2 md:col-span-1">
           <p className="text-xl font-bold text-primary-600">Durbeen</p>
