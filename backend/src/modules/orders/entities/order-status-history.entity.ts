@@ -1,13 +1,9 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import "dotenv/config";
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Order } from "./order.entity";
-import { OrderStatus } from "../enums/order-status.enum";
 
-/**
- * প্রতিটা স্ট্যাটাস-পরিবর্তনের audit trail — Order Tracking ফিচারের মূল ডেটাসোর্স
- * (ডিজাইন সিস্টেম ডকুমেন্টের OrderProgressStepper/OrderCard "বিস্তারিত দেখুন" টাইমলাইন
- * এই টেবিল থেকেই populate হবে)। changedBy-তে "system"/"admin:<userId>"/"webhook:<provider>"
- * জাতীয় ভ্যালু থাকবে যাতে কে/কী পরিবর্তন করেছে তা অডিটযোগ্য থাকে।
- */
+const dateType = process.env.DB_TYPE === "sqlite" ? "datetime" : "timestamptz";
+
 @Entity("order_status_history")
 export class OrderStatusHistory {
   @PrimaryGeneratedColumn("uuid")
@@ -18,18 +14,18 @@ export class OrderStatusHistory {
   orderId!: string;
 
   @Column({ name: "from_status", type: "varchar", length: 30, nullable: true })
-  fromStatus?: OrderStatus | null;
+  fromStatus?: string;
 
   @Column({ name: "to_status", type: "varchar", length: 30 })
-  toStatus!: OrderStatus;
+  toStatus!: string;
 
   @Column({ name: "changed_by", type: "varchar", length: 100 })
   changedBy!: string;
 
   @Column({ type: "text", nullable: true })
-  note?: string | null;
+  note?: string;
 
-  @CreateDateColumn({ name: "changed_at", type: "timestamptz" })
+  @Column({ name: "changed_at", type: dateType as any })
   changedAt!: Date;
 
   @ManyToOne(() => Order, (order) => order.statusHistory, { onDelete: "CASCADE" })

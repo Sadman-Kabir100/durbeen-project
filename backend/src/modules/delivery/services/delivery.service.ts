@@ -70,7 +70,7 @@ export class DeliveryService {
     changedBy: string
   ): Promise<Shipment> {
     const shipment = await this.findByOrderId(orderId);
-    const allowedNextStates = SHIPMENT_STATUS_TRANSITIONS[shipment.status];
+    const allowedNextStates = SHIPMENT_STATUS_TRANSITIONS[shipment.status as ShipmentStatus];
 
     if (!allowedNextStates.includes(dto.status)) {
       throw new BadRequestException(

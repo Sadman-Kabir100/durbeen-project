@@ -45,7 +45,7 @@ export class OrdersService {
     note?: string
   ): Promise<Order> {
     const order = await this.findById(orderId);
-    const allowedNextStates = ORDER_STATUS_TRANSITIONS[order.status];
+    const allowedNextStates = ORDER_STATUS_TRANSITIONS[order.status as OrderStatus];
 
     if (!allowedNextStates.includes(toStatus)) {
       throw new BadRequestException(

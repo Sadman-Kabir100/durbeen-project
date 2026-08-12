@@ -42,7 +42,6 @@ export class ProductsController {
   }
 
   @Public()
-  @Roles("admin", "staff")
   @Post("import/preview")
   @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 100 * 1024 * 1024 } }))
   async previewImport(
@@ -62,7 +61,6 @@ export class ProductsController {
   }
 
   @Public()
-  @Roles("admin", "staff")
   @Post("import")
   @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 100 * 1024 * 1024 } }))
   async importProducts(

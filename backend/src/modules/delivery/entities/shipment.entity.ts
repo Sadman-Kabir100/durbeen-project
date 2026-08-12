@@ -1,16 +1,20 @@
-import { Column, Entity, Index, OneToMany } from "typeorm";
-import { BaseEntity } from "@/common/entities/base.entity";
-import { ShipmentStatus, CourierProvider } from "../enums/delivery-status.enum";
-import { ShipmentTrackingEvent } from "./shipment-tracking-event.entity";
+import "dotenv/config";
+import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+
+const dateType = process.env.DB_TYPE === "sqlite" ? "datetime" : "timestamptz";
+const jsonType = process.env.DB_TYPE === "sqlite" ? "simple-json" : "jsonb";
 
 @Entity("shipments")
-export class Shipment extends BaseEntity {
-  @Index("idx_shipments_order_id", { unique: true })
+export class Shipment {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
+  @Index("idx_shipments_order_id")
   @Column({ name: "order_id", type: "uuid", unique: true })
   orderId!: string;
 
   @Column({ name: "courier_provider", type: "varchar", length: 30 })
-  courierProvider!: CourierProvider;
+  courierProvider!: string;
 
   @Column({ name: "courier_name", type: "varchar", length: 100, nullable: true })
   courierName?: string | null;
@@ -19,19 +23,15 @@ export class Shipment extends BaseEntity {
   @Column({ name: "tracking_number", type: "varchar", length: 100, nullable: true })
   trackingNumber?: string | null;
 
-  @Column({ type: "varchar", length: 30, default: ShipmentStatus.PENDING })
-  status!: ShipmentStatus;
+  @Column({ type: "varchar", length: 30, default: "pending" })
+  status!: string;
 
-  @Column({ name: "estimated_delivery_at", type: "timestamptz", nullable: true })
+  @Column({ name: "estimated_delivery_at", type: dateType as any, nullable: true })
   estimatedDeliveryAt?: Date | null;
 
-  @Column({ name: "actual_delivery_at", type: "timestamptz", nullable: true })
+  @Column({ name: "actual_delivery_at", type: dateType as any, nullable: true })
   actualDeliveryAt?: Date | null;
 
-  /** কুরিয়ার প্রোভাইডারের রেসপন্স/মেটাডেটা (label URL, cod amount confirmation ইত্যাদি) */
-  @Column({ name: "courier_metadata", type: "jsonb", nullable: true })
-  courierMetadata?: Record<string, unknown> | null;
-
-  @OneToMany(() => ShipmentTrackingEvent, (event) => event.shipment)
-  trackingEvents?: ShipmentTrackingEvent[];
+  @Column({ name: "courier_metadata", type: jsonType as any, nullable: true })
+  courierMetadata?: object | null;
 }

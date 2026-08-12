@@ -1,18 +1,13 @@
+import "dotenv/config";
 import { Column, Entity, Index, OneToMany } from "typeorm";
-import { BaseEntity } from "@/common/entities/base.entity";
-import { OrderStatus, PaymentMethod, PaymentStatus } from "../enums/order-status.enum";
+import { BaseEntity } from "../../../common/entities/base.entity";
 import { OrderItem } from "./order-item.entity";
 import { OrderStatusHistory } from "./order-status-history.entity";
 
-/**
- * নোট: এটি "Order Management" মডিউলের পূর্ণাঙ্গ সংস্করণ নয় — শুধু Payment/Delivery/
- * Invoice মডিউলের জন্য প্রয়োজনীয় ন্যূনতম ফাউন্ডেশন (FK টার্গেট + স্ট্যাটাস ট্রানজিশন)।
- * cart→order রূপান্তর, কাস্টমার-facing অর্ডার লিস্টিং/বাতিলকরণ ইত্যাদি ভবিষ্যতের
- * "Order Management" ধাপে এই একই এনটিটির উপর তৈরি হবে।
- */
+const dateType = process.env.DB_TYPE === "sqlite" ? "datetime" : "timestamptz";
+
 @Entity("orders")
 export class Order extends BaseEntity {
-  @Index("idx_orders_order_number", { unique: true })
   @Column({ name: "order_number", type: "varchar", length: 30, unique: true })
   orderNumber!: string;
 
@@ -24,8 +19,8 @@ export class Order extends BaseEntity {
   addressId!: string;
 
   @Index("idx_orders_status")
-  @Column({ type: "varchar", length: 30, default: OrderStatus.PLACED })
-  status!: OrderStatus;
+  @Column({ type: "varchar", length: 30, default: "placed" })
+  status!: string;
 
   @Column({ type: "numeric", precision: 10, scale: 2 })
   subtotal!: string;
@@ -40,20 +35,20 @@ export class Order extends BaseEntity {
   totalAmount!: string;
 
   @Column({ name: "payment_method", type: "varchar", length: 20 })
-  paymentMethod!: PaymentMethod;
+  paymentMethod!: string;
 
-  @Column({ name: "payment_status", type: "varchar", length: 20, default: PaymentStatus.PENDING })
-  paymentStatus!: PaymentStatus;
+  @Column({ name: "payment_status", type: "varchar", length: 20, default: "pending" })
+  paymentStatus!: string;
 
   @Column({ type: "text", nullable: true })
-  note?: string | null;
+  note?: string;
 
-  @Column({ name: "placed_at", type: "timestamptz" })
+  @Column({ name: "placed_at", type: dateType as any })
   placedAt!: Date;
 
-  @OneToMany(() => OrderItem, (item) => item.order)
-  items?: OrderItem[];
+  @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
+  items!: OrderItem[];
 
-  @OneToMany(() => OrderStatusHistory, (history) => history.order)
-  statusHistory?: OrderStatusHistory[];
+  @OneToMany(() => OrderStatusHistory, (history) => history.order, { cascade: true })
+  statusHistory!: OrderStatusHistory[];
 }

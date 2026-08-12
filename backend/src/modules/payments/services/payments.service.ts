@@ -175,7 +175,7 @@ export class PaymentsService {
       })
     );
 
-    const provider = this.providerRegistry.get(payment.provider);
+    const provider = this.providerRegistry.get(payment.provider as PaymentMethod);
     const result = await provider.refund(payment, amount, reason);
 
     refund.gatewayResponse = result.rawResponse;
