@@ -98,18 +98,16 @@ export async function getProducts(page = 1, limit = 20, search = ""): Promise<Pr
     ...(search ? { search } : {}),
   });
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/products?${query.toString()}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch products: ${res.statusText}`);
-    }
-    return await res.json();
-  } catch (err) {
-    console.warn("Backend API not reachable, returning fallback empty list", err);
-    return { data: [], total: 0, page: 1, limit };
+  const res = await fetch(`${API_BASE_URL}/products?${query.toString()}`, {
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `Failed to fetch products: ${res.statusText}`);
   }
+
+  return await res.json();
 }
 
 /**
