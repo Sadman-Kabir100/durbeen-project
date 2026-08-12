@@ -10,6 +10,12 @@ export const API_BASE_URL = rawBaseUrl.endsWith("/api/v1")
   ? `${rawBaseUrl}/v1`
   : `${rawBaseUrl}/api/v1`;
 
+if (typeof window !== "undefined" && process.env.NODE_ENV === "production" && API_BASE_URL.includes("localhost")) {
+  console.warn(
+    "[Durbeen Production Warning] NEXT_PUBLIC_API_BASE_URL is not set in Vercel settings. Please configure NEXT_PUBLIC_API_BASE_URL in Vercel Project Settings to point to your hosted backend API URL."
+  );
+}
+
 export interface ProductItem {
   id: string;
   name: string;

@@ -27,15 +27,19 @@ async function bootstrap() {
 
   app.enableCors({
     origin: configService.get<string>("app.nodeEnv") === "production"
-      ? ["https://www.durbeen.com"] // TODO: প্রোডাকশন ডিপ্লয়ের সময় আপনার প্রকৃত ডোমেইন দিয়ে বদলে দিন
+      ? [
+          "https://durbeen-project.vercel.app",
+          /^https:\/\/durbeen-project.*\.vercel\.app$/,
+          "https://www.durbeen.com",
+        ]
       : true, // ডেভেলপমেন্টে সব origin অনুমোদিত
     credentials: true, // httpOnly refresh-token cookie পাঠাতে/গ্রহণ করতে আবশ্যক
   });
 
-  const port = configService.get<number>("app.port", 4000);
-  await app.listen(port);
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : configService.get<number>("app.port", 4000);
+  await app.listen(port, "0.0.0.0");
   // eslint-disable-next-line no-console
-  console.log(`🚀 Durbeen API চলছে: http://localhost:${port}/${apiPrefix}`);
+  console.log(`🚀 Durbeen API চলছে: http://0.0.0.0:${port}/${apiPrefix}`);
 }
 
 void bootstrap();
