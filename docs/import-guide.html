@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Durbeen (দূরবীন) — বাল্ক CSV ইম্পোর্ট নির্দেশিকা ও প্রজেক্ট সামারি</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --success: #16a34a;
+      --success-light: #f0fdf4;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --neutral-50: #f8fafc;
+      --neutral-100: #f1f5f9;
+      --neutral-200: #e2e8f0;
+      --neutral-600: #475569;
+      --neutral-800: #1e293b;
+      --neutral-900: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: var(--neutral-900);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--neutral-200);
+    }
+
+    header {
+      border-bottom: 2px solid var(--neutral-100);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      color: var(--neutral-900);
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: var(--neutral-600);
+      font-size: 0.95rem;
+    }
+
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .stat-card {
+      background: var(--neutral-50);
+      border: 1px solid var(--neutral-200);
+      padding: 1.25rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-card .num {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: var(--neutral-600);
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      color: var(--neutral-800);
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--neutral-200);
+    }
+
+    .steps {
+      list-style: none;
+      counter-reset: step-counter;
+    }
+
+    .steps li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 2.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .steps li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--neutral-200);
+    }
+
+    th {
+      background: var(--neutral-50);
+      color: var(--neutral-600);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    code {
+      background: var(--neutral-100);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--primary-dark);
+    }
+
+    .footer-text {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--neutral-200);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--neutral-600);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Durbeen E-Commerce Platform</span>
+      <h1>বাল্ক CSV প্রোডাক্ট ইম্পোর্ট গাইড ও সিস্টেমিকেশন</h1>
+      <p class="subtitle">স্ক্যাপার বা ফাইল সোর্স থেকে হাজার হাজার প্রোডাক্ট এক ক্লিকে সংরক্ষণের নির্দেশিকা</p>
+    </header>
+
+    <div class="grid-stats">
+      <div class="stat-card">
+        <div class="num">৮২,৯৬২+</div>
+        <div class="label">সর্বোচ্চ সারি প্রসেসিং ক্ষমতা</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">O(1)</div>
+        <div class="label">ইন-মেমোরি ডুপ্লিকেট চেকিং</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">৫০০ সারি / ব্যাচ</div>
+        <div class="label">ডাটাবেস ট্রানজিশন চ্যাঙ্ক</div>
+      </div>
+    </div>
+
+    <h2>🚀 ইম্পোর্ট করার সহজ ধাপসমূহ</h2>
+    <ol class="steps">
+      <li>অ্যাডমিন প্যানেলে লগইন করে সাইডবার থেকে <strong>ক্যাটালগ &rarr; প্রোডাক্ট ম্যানেজমেন্ট</strong>-এ যান।</li>
+      <li>উপরে ডানপাশের <strong>"CSV ইম্পোর্ট করুন"</strong> বাটনে ক্লিক করে <code>/admin/products/import</code> পেজে যান।</li>
+      <li>আপনার স্ক্যাপারের তৈরি <code>.csv</code> ফাইলটি নির্বাচন করুন (UTF-8 বাংলা ইউনিকোড সাপোর্ট নিশ্চিত করে)।</li>
+      <li>ফাইল সিলেক্ট করতেই প্রথম ১০টি সারির লাইভ <strong>প্রিভিউ (Preview)</strong> ও মোট বৈধ সারির গণনা দেখতে পাবেন।</li>
+      <li><strong>"ইম্পোর্ট শুরু করুন"</strong> বাটনে চাপ দিলে সিস্টেমে রিয়েল-টাইম ইম্পোর্ট প্রসেসিং শুরু হবে এবং শেষ হলে পূর্ণাঙ্গ পরিসংখ্যান প্রদর্শিত হবে।</li>
+    </ol>
+
+    <h2>📊 CSV কলাম ম্যাপ ফিল্ড নির্দেশিকা</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>CSV কলাম</th>
+          <th>ডাটাবেস ম্যাপিং</th>
+          <th>বিবরণ ও ফিল্টার নিয়ম</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>name</code></td>
+          <td>Product Name</td>
+          <td>প্রোডাক্টের নাম (আবশ্যক ফিল্ড)</td>
+        </tr>
+        <tr>
+          <td><code>author</code></td>
+          <td>Author Name</td>
+          <td>লেখকের নাম (বিদ্যমান থাকলে রিইউজ, না থাকলে অটো ক্রিয়েট)</td>
+        </tr>
+        <tr>
+          <td><code>publisher</code></td>
+          <td>Publisher Name</td>
+          <td>প্রকাশনীর নাম (স্বয়ংক্রিয় রিইউজ বা তৈরি)</td>
+        </tr>
+        <tr>
+          <td><code>category</code></td>
+          <td>Category Name</td>
+          <td>ক্যাটাগরির নাম (স্বয়ংক্রিয় রিইউজ বা তৈরি)</td>
+        </tr>
+        <tr>
+          <td><code>regular_price</code></td>
+          <td>Regular Price</td>
+          <td>মূল দাম (সংখ্যা)</td>
+        </tr>
+        <tr>
+          <td><code>sale_price</code></td>
+          <td>Sale Price</td>
+          <td>বিক্রয় মূল্য (সংখ্যা)</td>
+        </tr>
+        <tr>
+          <td><code>discount</code></td>
+          <td>Discount %</td>
+          <td>ছাড়ের শতাংশ (স্বয়ংক্রিয় গণনাকৃত বা সরাসরি প্রদত্ত)</td>
+        </tr>
+        <tr>
+          <td><code>id</code></td>
+          <td>Source Product ID</td>
+          <td>এক্সটার্নাল সোর্স প্রোডাক্ট আইডি (ডুপ্লিকেট রোধার অন্যতম প্রাইমারি ইন্ডেক্স)</td>
+        </tr>
+        <tr>
+          <td><code>url</code></td>
+          <td>Source URL</td>
+          <td>মূল সোর্স ইউআরএল (ডুপ্লিকেট রোধার সেকেন্ডারি ইন্ডেক্স)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>🔗 এপিআই সার্ভিস রুট</h2>
+    <p>সিস্টেমের ব্যাকএন্ড এন্ডপয়েন্টসমূহ:</p>
+    <ul style="margin: 0.5rem 0 1rem 1.5rem; font-size: 0.9rem;">
+      <li><code>POST /api/v1/products/import/preview</code> — প্রিভিউ জেনারেটর</li>
+      <li><code>POST /api/v1/products/import</code> — বাল্ক ডাটাবেস ব্যাচ ইনসার্টার</li>
+    </ul>
+
+    <div class="footer-text">
+      © 2026 Durbeen (দূরবীন) E-Commerce Platform — সর্বস্বত্ব সংরক্ষিত।
+    </div>
+  </div>
+</body>
+</html>
